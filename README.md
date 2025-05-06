@@ -267,11 +267,21 @@ npm install
 # Generate Protocol Buffer TypeScript definitions
 npm run proto:gen
 
-# Start the gRPC service
-npm run start:grpc
+# Build individual services with their dependencies
+npm run build:grpc        # Build gRPC service with dependencies
+npm run build:rest-api    # Build REST API service with dependencies
+npm run build:all         # Build all services and libraries
 
-# In a separate terminal, start the REST API service
-npm run start:rest-api
+# Run services (without rebuilding)
+npm run run:grpc          # Run gRPC service only
+npm run run:rest-api      # Run REST API service only
+
+# Build and run services in a single command
+npm run start:grpc        # Build and run gRPC service
+npm run start:rest-api    # Build and run REST API service
+
+# Start all services together
+npm run start:all         # Build all and run both services concurrently
 ```
 
 The REST API will be available at: `http://localhost:3000/api`

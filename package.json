@@ -4,8 +4,14 @@
   "license": "MIT",
   "scripts": {
     "proto:gen": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=nestJs=true,outputServices=grpc-js --proto_path=. libs/proto/src/lib/*.proto && mkdir -p dist/libs/proto/src/lib && cp libs/proto/src/lib/*.proto dist/libs/proto/src/lib/",
-    "start:grpc": "nx build grpc-service --configuration=production && nx serve grpc-service",
-    "start:rest-api": "nx build rest-api-service --configuration=production && nx serve rest-api-service"
+    "build:grpc": "nx build grpc-service --configuration=production --with-deps",
+    "build:rest-api": "nx build rest-api-service --configuration=production --with-deps",
+    "build:all": "npm run build:grpc && npm run build:rest-api",
+    "run:grpc": "nx serve grpc-service",
+    "run:rest-api": "nx serve rest-api-service",
+    "start:grpc": "npm run build:grpc && npm run run:grpc",
+    "start:rest-api": "npm run build:rest-api && npm run run:rest-api",
+    "start:all": "npm run build:all && concurrently \"npm run run:grpc\" \"npm run run:rest-api\""
   },
   "private": true,
   "dependencies": {
@@ -16,6 +22,7 @@
     "@nestjs/microservices": "^10.2.7",
     "@nestjs/platform-express": "^10.0.2",
     "axios": "^1.6.0",
+    "concurrently": "^8.2.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },
