@@ -184,6 +184,69 @@ This architecture ensures that:
 - Service contracts are well-defined through Protocol Buffers
 - Changes to shared code automatically propagate to all consumers
 
+### Build Output and Distribution Structure
+
+When you build the applications and libraries, Nx generates a structured output in the `dist/` directory that mirrors the source structure:
+
+```
+dist/
+├── apps/                           # Built applications
+│   ├── grpc-service/               # gRPC service build output
+│   │   ├── main.js                 # Entry point for gRPC service
+│   │   └── ...                     # Other compiled files
+│   │
+│   └── rest-api-service/           # REST API service build output
+│       ├── main.js                 # Entry point for REST API service
+│       └── ...                     # Other compiled files
+│
+├── libs/                           # Built libraries
+│   ├── common/                     # Common library build output
+│   │   ├── src/
+│   │   │   ├── index.js            # Main library exports
+│   │   │   └── lib/                # Library implementation
+│   │   │       ├── data/           # Items seed data
+│   │   │       └── interfaces/     # TypeScript interfaces
+│   │   └── ...
+│   │
+│   └── proto/                      # Proto library build output
+│       ├── src/
+│       │   └── lib/
+│       │       ├── hello.proto     # Protocol Buffers definition file
+│       │       └── ...             # Generated TypeScript code
+│       └── ...
+└── ...
+```
+
+#### Package Organization
+
+Each built package serves a specific purpose in the architecture:
+
+1. **grpc-service**: 
+   - **Purpose**: Implements the gRPC server using NestJS
+   - **Entry Point**: `dist/apps/grpc-service/main.js`
+   - **Dependencies**: Common library (data and interfaces), Proto library (service definitions)
+   - **Runtime**: Node.js microservice on port 50051
+
+2. **rest-api-service**:
+   - **Purpose**: Exposes REST endpoints and forwards requests to gRPC service
+   - **Entry Point**: `dist/apps/rest-api-service/main.js`
+   - **Dependencies**: Proto library (client generation), Common library (interfaces)
+   - **Runtime**: Express web server on port 3000
+
+3. **common library**:
+   - **Purpose**: Shared code, interfaces, and data models
+   - **Entry Point**: `dist/libs/common/src/index.js`
+   - **Consumers**: Both gRPC and REST API services
+   - **Content**: TypeScript interfaces and seed data
+
+4. **proto library**:
+   - **Purpose**: Protocol Buffers definitions and generated code
+   - **Key Files**: `dist/libs/proto/src/lib/hello.proto` (definition)
+   - **Consumers**: Both gRPC and REST API services
+   - **Content**: Service contract definitions and TypeScript interfaces
+
+During the build process, Nx ensures that each package references its dependencies correctly, and that the compiled output maintains the same import structure defined in the source code.
+
 ## Getting Started
 
 ### Prerequisites
