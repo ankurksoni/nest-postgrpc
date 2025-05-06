@@ -4,6 +4,7 @@ package hello;
 
 service HelloService {
   rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc GetItems (ItemsRequest) returns (ItemsResponse);
 }
 
 message HelloRequest {
@@ -12,4 +13,24 @@ message HelloRequest {
 
 message HelloReply {
   string message = 1;
+}
+
+message Item {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  repeated string tags = 5;
+  bool available = 6;
+  map<string, string> metadata = 7;
+}
+
+message ItemsRequest {
+  int32 limit = 1;
+  string filter = 2;
+}
+
+message ItemsResponse {
+  repeated Item items = 1;
+  int32 total_count = 2;
 }
