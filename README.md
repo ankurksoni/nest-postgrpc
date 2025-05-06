@@ -1,101 +1,198 @@
-# 
+# NestJS gRPC and REST API Service
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A monorepo containing a gRPC microservice and a REST API gateway that communicates with the gRPC service. Built with NestJS and Nx.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Project Structure
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Run tasks
-
-To run the dev server for your app, use:
-
-```sh
-npx nx serve grpc-service
+```
+nest-postgrpc/
+├── apps/
+│   ├── grpc-service/              # gRPC microservice
+│   │   └── src/
+│   │       ├── app/
+│   │       │   ├── app.controller.ts    # gRPC controllers
+│   │       │   ├── app.module.ts        # gRPC module configuration
+│   │       │   └── app.service.ts       # Business logic implementation
+│   │       └── main.ts                  # gRPC service entry point
+│   │
+│   ├── rest-api-service/          # REST API gateway
+│   │   └── src/
+│   │       ├── app/
+│   │       │   ├── app.controller.ts    # REST controllers
+│   │       │   ├── app.module.ts        # REST module configuration
+│   │       │   └── app.service.ts       # gRPC client wrapper
+│   │       ├── grpc-client.provider.ts  # gRPC client configuration
+│   │       └── main.ts                  # REST API entry point
+│   │
+│   ├── grpc-service-e2e/          # gRPC service E2E tests
+│   └── rest-api-service-e2e/      # REST API E2E tests
+│
+└── libs/
+    ├── common/                    # Shared code between services
+    │   └── src/
+    │       ├── lib/
+    │       │   ├── interfaces/    # Shared TypeScript interfaces
+    │       │   └── data/          # Shared data and constants
+    │       └── index.ts           # Public API exports
+    │
+    └── proto/                     # Shared Protocol Buffers
+        └── src/
+            └── lib/
+                ├── hello.proto    # Protocol Buffers definition
+                └── hello.ts       # Generated TypeScript interfaces
 ```
 
-To create a production bundle:
+## Tech Stack
 
-```sh
+- **Framework**: [NestJS](https://nestjs.com/) - A progressive Node.js framework
+- **Monorepo Tool**: [Nx](https://nx.dev/) - Smart, fast and extensible build system
+- **Protocol**: [gRPC](https://grpc.io/) - High performance RPC framework
+- **Language**: [TypeScript](https://www.typescriptlang.org/) - Strongly typed JavaScript
+- **API Gateway**: REST API with Express
+
+### Key Dependencies
+
+- **@nestjs/microservices**: NestJS microservices support
+- **@grpc/grpc-js**: gRPC implementation for Node.js
+- **ts-proto**: Protocol Buffers compiler for TypeScript
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- npm or yarn
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+```
+
+### Running the Services
+
+```bash
+# Generate Protocol Buffer TypeScript definitions
+npm run proto:gen
+
+# Start the gRPC service
+npm run start:grpc
+
+# In a separate terminal, start the REST API service
+npm run start:rest-api
+```
+
+The REST API will be available at: `http://localhost:3000/api`
+The gRPC service runs on: `localhost:50051`
+
+## API Endpoints
+
+### REST API
+
+#### Get Hello Message
+
+```
+GET /api/hello?name=YourName
+```
+
+Example:
+
+```bash
+curl "http://localhost:3000/api/hello?name=John"
+```
+
+Response:
+```json
+"Hello, John!"
+```
+
+#### Get Items
+
+```
+GET /api/items?limit=5&filter=product
+```
+
+Parameters:
+- `limit`: Maximum number of items to return (default: 10)
+- `filter`: Filter items by name, description, or tags (optional)
+
+Example:
+
+```bash
+curl "http://localhost:3000/api/items?limit=2&filter=electronics"
+```
+
+Response:
+```json
+{
+  "items": [
+    {
+      "id": "1",
+      "name": "Product One",
+      "description": "This is the first product",
+      "price": 19.99,
+      "tags": ["electronics", "gadget"],
+      "available": true,
+      "metadata": { "color": "black", "size": "medium" }
+    },
+    {
+      "id": "4",
+      "name": "Product Four",
+      "description": "This is the fourth product",
+      "price": 49.99,
+      "tags": ["electronics", "computer"],
+      "available": true,
+      "metadata": { "brand": "TechX", "warranty": "1 year" }
+    }
+  ],
+  "total_count": 2
+}
+```
+
+### gRPC Service
+
+The gRPC service is not directly accessible via HTTP. It is consumed by the REST API service.
+
+However, if you want to interact with it directly, you can use a gRPC client such as [grpcurl](https://github.com/fullstorydev/grpcurl):
+
+```bash
+# List all available services
+grpcurl -plaintext localhost:50051 list
+
+# Say hello
+grpcurl -plaintext -d '{"name": "John"}' localhost:50051 hello.HelloService/SayHello
+
+# Get items
+grpcurl -plaintext -d '{"limit": 2, "filter": "electronics"}' localhost:50051 hello.HelloService/GetItems
+```
+
+## Development
+
+### Adding New gRPC Methods
+
+1. Update the Protocol Buffer definition in `libs/proto/src/lib/hello.proto`
+2. Regenerate TypeScript interfaces:
+   ```bash
+   npm run proto:gen
+   ```
+3. Implement the service method in `apps/grpc-service/src/app/app.service.ts`
+4. Add a corresponding method in the REST API: `apps/rest-api-service/src/app/app.service.ts`
+5. Expose the method via a controller in `apps/rest-api-service/src/app/app.controller.ts`
+
+### Nx Commands
+
+```bash
+# Build a project
 npx nx build grpc-service
-```
 
-To see all available targets to run for a project, run:
+# Test a project
+npx nx test grpc-service
 
-```sh
+# See available commands for a project
 npx nx show project grpc-service
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## License
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/nest:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/node:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT

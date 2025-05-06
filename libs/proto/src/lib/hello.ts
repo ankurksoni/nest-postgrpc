@@ -20,6 +20,31 @@ export interface HelloReply {
   message: string;
 }
 
+export interface Item {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  tags: string[];
+  available: boolean;
+  metadata: { [key: string]: string };
+}
+
+export interface Item_MetadataEntry {
+  key: string;
+  value: string;
+}
+
+export interface ItemsRequest {
+  limit: number;
+  filter: string;
+}
+
+export interface ItemsResponse {
+  items: Item[];
+  totalCount: number;
+}
+
 export const HELLO_PACKAGE_NAME = "hello";
 
 function createBaseHelloRequest(): HelloRequest {
@@ -96,17 +121,271 @@ export const HelloReply: MessageFns<HelloReply> = {
   },
 };
 
+function createBaseItem(): Item {
+  return { id: "", name: "", description: "", price: 0, tags: [], available: false, metadata: {} };
+}
+
+export const Item: MessageFns<Item> = {
+  encode(message: Item, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.name !== "") {
+      writer.uint32(18).string(message.name);
+    }
+    if (message.description !== "") {
+      writer.uint32(26).string(message.description);
+    }
+    if (message.price !== 0) {
+      writer.uint32(33).double(message.price);
+    }
+    for (const v of message.tags) {
+      writer.uint32(42).string(v!);
+    }
+    if (message.available !== false) {
+      writer.uint32(48).bool(message.available);
+    }
+    Object.entries(message.metadata).forEach(([key, value]) => {
+      Item_MetadataEntry.encode({ key: key as any, value }, writer.uint32(58).fork()).join();
+    });
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Item {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseItem();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.description = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 33) {
+            break;
+          }
+
+          message.price = reader.double();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.tags.push(reader.string());
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.available = reader.bool();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          const entry7 = Item_MetadataEntry.decode(reader, reader.uint32());
+          if (entry7.value !== undefined) {
+            message.metadata[entry7.key] = entry7.value;
+          }
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseItem_MetadataEntry(): Item_MetadataEntry {
+  return { key: "", value: "" };
+}
+
+export const Item_MetadataEntry: MessageFns<Item_MetadataEntry> = {
+  encode(message: Item_MetadataEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== "") {
+      writer.uint32(10).string(message.key);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): Item_MetadataEntry {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseItem_MetadataEntry();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseItemsRequest(): ItemsRequest {
+  return { limit: 0, filter: "" };
+}
+
+export const ItemsRequest: MessageFns<ItemsRequest> = {
+  encode(message: ItemsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.limit !== 0) {
+      writer.uint32(8).int32(message.limit);
+    }
+    if (message.filter !== "") {
+      writer.uint32(18).string(message.filter);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ItemsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseItemsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.limit = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.filter = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
+function createBaseItemsResponse(): ItemsResponse {
+  return { items: [], totalCount: 0 };
+}
+
+export const ItemsResponse: MessageFns<ItemsResponse> = {
+  encode(message: ItemsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.items) {
+      Item.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.totalCount !== 0) {
+      writer.uint32(16).int32(message.totalCount);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ItemsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseItemsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.items.push(Item.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.totalCount = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+};
+
 export interface HelloServiceClient {
   sayHello(request: HelloRequest): Observable<HelloReply>;
+
+  getItems(request: ItemsRequest): Observable<ItemsResponse>;
 }
 
 export interface HelloServiceController {
   sayHello(request: HelloRequest): Promise<HelloReply> | Observable<HelloReply> | HelloReply;
+
+  getItems(request: ItemsRequest): Promise<ItemsResponse> | Observable<ItemsResponse> | ItemsResponse;
 }
 
 export function HelloServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["sayHello"];
+    const grpcMethods: string[] = ["sayHello", "getItems"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HelloService", method)(constructor.prototype[method], method, descriptor);
@@ -132,10 +411,20 @@ export const HelloServiceService = {
     responseSerialize: (value: HelloReply) => Buffer.from(HelloReply.encode(value).finish()),
     responseDeserialize: (value: Buffer) => HelloReply.decode(value),
   },
+  getItems: {
+    path: "/hello.HelloService/GetItems",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: ItemsRequest) => Buffer.from(ItemsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => ItemsRequest.decode(value),
+    responseSerialize: (value: ItemsResponse) => Buffer.from(ItemsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => ItemsResponse.decode(value),
+  },
 } as const;
 
 export interface HelloServiceServer extends UntypedServiceImplementation {
   sayHello: handleUnaryCall<HelloRequest, HelloReply>;
+  getItems: handleUnaryCall<ItemsRequest, ItemsResponse>;
 }
 
 export interface MessageFns<T> {

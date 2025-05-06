@@ -32,5 +32,5 @@ message ItemsRequest {
 
 message ItemsResponse {
   repeated Item items = 1;
-  int32 total_count = 2;
+  int32 totalCount = 2;
 }

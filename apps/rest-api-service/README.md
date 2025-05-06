@@ -15,7 +15,7 @@ GET /api/hello?name=YourName
 
 **Response:**
 ```json
-"Hello bhai, YourName!"
+"Hello, YourName!"
 ```
 
 ### 2. Items Endpoint

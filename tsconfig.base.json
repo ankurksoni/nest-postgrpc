@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@./common": ["libs/common/src/index.ts"],
       "@./proto": ["libs/proto/src/index.ts"]
     }
   },

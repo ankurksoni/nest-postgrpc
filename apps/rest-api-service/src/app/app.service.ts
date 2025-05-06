@@ -1,20 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { grpcClient } from '../grpc-client.provider';
-
-interface Item {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  tags: string[];
-  available: boolean;
-  metadata: Record<string, string>;
-}
-
-interface ItemsResponse {
-  items: Item[];
-  total_count: number;
-}
+import { Item, ItemsResponse } from '@./common';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -34,7 +20,7 @@ export class AppService implements OnModuleInit {
       const response = await this.helloService.GetItems({ limit, filter }).toPromise();
       return {
         items: response.items,
-        total_count: response.total_count
+        totalCount: response.totalCount
       };
     } catch (error) {
       console.error('Error fetching items:', error);
