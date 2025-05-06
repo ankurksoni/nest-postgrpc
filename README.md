@@ -2,6 +2,124 @@
 
 A monorepo containing a gRPC microservice and a REST API gateway that communicates with the gRPC service. Built with NestJS and Nx.
 
+## Project Genesis
+
+This project was created using the following steps and commands:
+
+### Prerequisites Installation
+
+```bash
+# Update package lists
+sudo apt update
+
+# Install Protocol Buffers compiler
+sudo apt install -y protobuf-compiler
+
+# Install Nx globally
+npm i -g nx
+```
+
+### Project Initialization
+
+```bash
+# Initialize Nx
+npx nx init
+
+# Clean directory for fresh start
+rm -rf ./*
+rm -rf .[^.] .??*
+
+# Create a new Nx workspace with NestJS preset
+npx create-nx-workspace@latest . --preset=nest
+
+# Generate a new NestJS application for the REST API service
+nx g @nx/nest:app apps/rest-api-service
+
+# Install gRPC and microservices dependencies
+npm i @nestjs/microservices@10.2.7 @grpc/grpc-js @grpc/proto-loader
+
+# Install TypeScript Protocol Buffers compiler as dev dependency
+npm i -D ts-proto
+
+# Generate a new library for Protocol Buffers definitions
+nx g @nx/js:lib proto --directory=libs/proto
+```
+
+### Protocol Buffers Setup
+
+After creating the proto library, additional steps were taken to set up Protocol Buffers:
+
+1. Created Protocol Buffers definition file at `libs/proto/src/lib/hello.proto`:
+   ```protobuf
+   syntax = "proto3";
+   
+   package hello;
+   
+   service HelloService {
+     rpc SayHello (HelloRequest) returns (HelloReply);
+     rpc GetItems (ItemsRequest) returns (ItemsResponse);
+   }
+   
+   // Message definitions...
+   ```
+
+2. Added a script in `package.json` to generate TypeScript code from Protocol Buffers:
+   ```json
+   "proto:gen": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=nestJs=true,outputServices=grpc-js --proto_path=. libs/proto/src/lib/*.proto && mkdir -p dist/libs/proto/src/lib && cp libs/proto/src/lib/*.proto dist/libs/proto/src/lib/"
+   ```
+
+3. Generated TypeScript code from Protocol Buffers:
+   ```bash
+   npm run proto:gen
+   ```
+
+4. Set up the gRPC service in `apps/grpc-service/src/main.ts`:
+   ```typescript
+   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+     transport: Transport.GRPC,
+     options: {
+       package: 'hello',
+       protoPath: join(__dirname, '../../../libs/proto/src/lib/hello.proto'),
+       url: 'localhost:50051',
+     },
+   });
+   ```
+
+5. Set up the gRPC client in `apps/rest-api-service/src/grpc-client.provider.ts`:
+   ```typescript
+   export const grpcClient = ClientProxyFactory.create({
+     transport: Transport.GRPC,
+     options: {
+       package: 'hello',
+       protoPath: join(__dirname, '../../../libs/proto/src/lib/hello.proto'),
+       url: 'localhost:50051',
+     },
+   });
+   ```
+
+The initial project setup creates a monorepo with:
+- A gRPC service (the default app from the NestJS preset)
+- A REST API service (added with `nx g @nx/nest:app`)
+- A shared Protocol Buffers library
+- All necessary dependencies for gRPC communication
+
+### Common Library Addition
+
+Later, a common library was added to extract shared interfaces and data:
+
+```bash
+# Generate a new library for common code
+nx g @nx/js:lib common --directory=libs/common
+```
+
+After creating the library, shared interfaces and data models were extracted from the services to improve code organization and reusability:
+
+1. Moved TypeScript interfaces to `libs/common/src/lib/interfaces/`
+2. Moved seed data to `libs/common/src/lib/data/`
+3. Updated `index.ts` to export the shared code
+4. Updated `tsconfig.base.json` with appropriate path mapping
+5. Updated imports in the services to use the common library
+
 ## Project Structure
 
 ```
