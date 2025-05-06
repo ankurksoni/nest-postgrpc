@@ -56,6 +56,134 @@ nest-postgrpc/
 - **@grpc/grpc-js**: gRPC implementation for Node.js
 - **ts-proto**: Protocol Buffers compiler for TypeScript
 
+## How Nx Manages Shared Libraries
+
+Nx provides a powerful monorepo architecture that makes it easy to share code between multiple applications. Here's how it works in this project:
+
+### Key Configuration Files
+
+Several important files manage dependencies and glue the monorepo structure together:
+
+1. **nx.json**: The root configuration file for Nx that defines workspace-wide settings, including:
+   - Project naming conventions
+   - Task execution options
+   - Caching settings
+   - Default project configurations
+
+2. **package.json**: Contains all npm dependencies for the entire monorepo, including:
+   - Shared dependencies for all applications
+   - Development tools like TypeScript and ESLint
+   - Scripts for common operations (`proto:gen`, `start:grpc`, etc.)
+
+3. **project.json**: Each project (app or lib) has its own project.json file defining:
+   - Build configurations
+   - Serve configurations
+   - Test settings
+   - Project-specific dependencies
+
+4. **tsconfig.base.json**: The root TypeScript configuration that:
+   - Sets up path mappings (discussed below)
+   - Configures compiler options shared across all projects
+   - Establishes a consistent TypeScript environment
+
+### Module Resolution with Path Mapping
+
+The key file that manages module sharing is `tsconfig.base.json`, which contains path mappings that tell TypeScript how to resolve imports:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@./common": ["libs/common/src/index.ts"],
+      "@./proto": ["libs/proto/src/index.ts"]
+    }
+  }
+}
+```
+
+These path mappings allow any application in the monorepo to import shared code with a consistent import path:
+
+```typescript
+// Importing shared interfaces and data in any service
+import { Item, ItemsResponse, allItems } from '@./common';
+```
+
+### Library Structure
+
+Nx organizes shared code into libraries, each with a clear API exposed through its `index.ts` file:
+
+```typescript
+// libs/common/src/index.ts
+export * from './lib/interfaces/item.interface';
+export * from './lib/data/items.data';
+```
+
+This pattern:
+- Prevents applications from directly accessing internal library code
+- Encourages well-defined library boundaries
+- Makes refactoring and maintenance easier
+
+### Dependencies Graph
+
+Nx tracks dependencies between applications and libraries using a dependency graph. You can visualize these dependencies with:
+
+```bash
+npx nx graph
+```
+
+This dependency graph is used for:
+- Determining which projects need to be rebuilt when code changes
+- Enabling parallel task execution
+- Enabling intelligent caching
+
+### Build and Deploy Efficiency
+
+When you build a project, Nx only builds the parts of the monorepo that are affected by changes:
+
+```bash
+npx nx build grpc-service
+```
+
+This significantly speeds up the build process in larger projects with many applications and libraries.
+
+### Application-Library Connections
+
+In this project, the applications and libraries are connected in several ways:
+
+1. **Dependency Connections**:
+   - The REST API service depends on the common library for interfaces and the proto library for gRPC client generation
+   - The gRPC service depends on the common library for interfaces and data, and the proto library for service definitions
+
+2. **Import References**:
+   Each application references shared libraries using configured path aliases:
+   ```typescript
+   // In grpc-service
+   import { Item, ItemsResponse, allItems } from '@./common';
+   
+   // In rest-api-service
+   import { Item, ItemsResponse } from '@./common';
+   ```
+
+3. **Service Communication**:
+   The REST API service communicates with the gRPC service using the client generated from proto files:
+   ```typescript
+   // apps/rest-api-service/src/grpc-client.provider.ts
+   export const grpcClient = ClientProxyFactory.create({
+     transport: Transport.GRPC,
+     options: {
+       package: 'hello',
+       protoPath: join(__dirname, '../../../libs/proto/src/lib/hello.proto'),
+       url: 'localhost:50051',
+     },
+   });
+   ```
+
+This architecture ensures that:
+- Code is reused efficiently across services
+- Type definitions are consistent
+- Service contracts are well-defined through Protocol Buffers
+- Changes to shared code automatically propagate to all consumers
+
 ## Getting Started
 
 ### Prerequisites
@@ -146,7 +274,7 @@ Response:
       "metadata": { "brand": "TechX", "warranty": "1 year" }
     }
   ],
-  "total_count": 2
+  "totalCount": 2
 }
 ```
 
