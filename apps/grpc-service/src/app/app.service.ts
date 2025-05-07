@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Item, ItemsResponse, allItems } from '@./common';
+import { ItemsResponse, allItems } from '@./common';
 
 @Injectable()
 export class AppService {
@@ -8,23 +8,18 @@ export class AppService {
   }
 
   getItems(limit: number = 10, filter: string = ''): ItemsResponse {
-    // Apply filtering if filter parameter is provided
-    let filteredItems = allItems;
-    if (filter) {
-      const filterLower = filter.toLowerCase();
-      filteredItems = allItems.filter(item => 
-        item.name.toLowerCase().includes(filterLower) || 
-        item.description.toLowerCase().includes(filterLower) ||
-        item.tags.some(tag => tag.toLowerCase().includes(filterLower))
-      );
-    }
-    
-    // Apply limit
-    const limitedItems = filteredItems.slice(0, limit);
-    
+    const filteredItems = filter
+      ? allItems.filter(
+          ({ name, description, tags }) =>
+            name.toLowerCase().includes(filter.toLowerCase()) ||
+            description.toLowerCase().includes(filter.toLowerCase()) ||
+            tags.some(tag => tag.toLowerCase().includes(filter.toLowerCase())),
+        )
+      : allItems.slice(0, limit);
+
     return {
-      items: limitedItems,
-      totalCount: filteredItems.length
+      items: filteredItems,
+      totalCount: filteredItems.length,
     };
   }
 }

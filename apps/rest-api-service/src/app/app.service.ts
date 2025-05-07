@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { grpcClient } from '../grpc-client.provider';
-import { Item, ItemsResponse } from '@./common';
+import { ItemsResponse } from '@./common';
 
 @Injectable()
 export class AppService implements OnModuleInit {
