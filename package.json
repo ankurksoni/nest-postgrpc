@@ -4,14 +4,17 @@
   "license": "MIT",
   "scripts": {
     "proto:gen": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=. --ts_proto_opt=nestJs=true,outputServices=grpc-js --proto_path=. libs/proto/src/lib/*.proto && mkdir -p dist/libs/proto/src/lib && cp libs/proto/src/lib/*.proto dist/libs/proto/src/lib/",
-    "build:grpc": "nx build grpc-service --configuration=production --with-deps",
-    "build:rest-api": "nx build rest-api-service --configuration=production --with-deps",
+    "build:grpc": "nx build grpc-service --configuration=production",
+    "build:rest-api": "nx build rest-api-service --configuration=production",
     "build:all": "npm run build:grpc && npm run build:rest-api",
     "run:grpc": "nx serve grpc-service",
     "run:rest-api": "nx serve rest-api-service",
     "start:grpc": "npm run build:grpc && npm run run:grpc",
     "start:rest-api": "npm run build:rest-api && npm run run:rest-api",
-    "start:all": "npm run build:all && concurrently \"npm run run:grpc\" \"npm run run:rest-api\""
+    "start:all": "npm run build:all && concurrently \"npm run run:grpc\" \"npm run run:rest-api\"",
+    "test:grpc-controller": "nx test grpc-service --test-file=app.controller.spec",
+    "test:rest-controller": "nx test rest-api-service --test-file=app.controller.spec",
+    "test:controllers": "nx run-many --target=test --projects=grpc-service,rest-api-service --test-file=app.controller.spec"
   },
   "private": true,
   "dependencies": {
